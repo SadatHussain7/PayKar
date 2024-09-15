@@ -1,18 +1,51 @@
 import { NextResponse } from "next/server";
 import prisma from "@repo/db/client";
 
-const client = prisma;
-
 export const GET = async () => {
-    await client.user.create({
-        data: {
-            email: "asd",
-            name: "adsads",
-            number: "1234567890",
-            password: "password123"
+  const email = "asd";
+  const name = "adsads";
+  const number = "1234567890";
+  const password = "password123";
+
+  try {
+    // Check if the user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        {
+          message: "User with this email already exists",
+        },
+        {
+          status: 409,
         }
+      );
+    }
+
+    // Create a new user if not exists
+    await prisma.user.create({
+      data: {
+        email,
+        name,
+        number,
+        password,
+      },
     });
+
     return NextResponse.json({
-        message: "hi there"
+      message: "User created successfully",
     });
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        message: "An error occurred",
+        error: error.message,
+      },
+      {
+        status: 500,
+      }
+    );
+  }
 };
