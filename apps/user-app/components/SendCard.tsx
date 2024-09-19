@@ -8,39 +8,39 @@ import { p2pTransfer } from "../app/lib/actions/p2pTransfer";
 
 export function SendCard() {
   const [number, setNumber] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(0);
 
   return (
     <div className="h-[90vh]">
-      <Center>
-        <Card title="Send">
-          <div className="min-w-72 pt-2">
-            <TextInput
-              placeholder={"Number"}
-              label="Number"
-              onChange={(value) => {
-                setNumber(value);
+      <Card title="Send">
+        <div className="w-full">
+          <TextInput
+            label={"Number"}
+            placeholder={"Number"}
+            onChange={(value) => {
+              setNumber(value);
+            }}
+          />
+
+          <TextInput
+            label={"Amount"}
+            placeholder={"Amount"}
+            onChange={(value) => {
+              setAmount(Number(value));
+            }}
+          />
+
+          <div className="flex justify-center pt-4">
+            <Button
+              onClick={async () => {
+                await p2pTransfer(number, amount * 100);
               }}
-            />
-            <TextInput
-              placeholder={"Amount"}
-              label="Amount"
-              onChange={(value) => {
-                setAmount(value);
-              }}
-            />
-            <div className="pt-4 flex justify-center">
-              <Button
-                onClick={async () => {
-                  await p2pTransfer(number, Number(amount) * 100);
-                }}
-              >
-                Send
-              </Button>
-            </div>
+            >
+              Send
+            </Button>
           </div>
-        </Card>
-      </Center>
+        </div>
+      </Card>
     </div>
   );
 }

@@ -8,6 +8,7 @@ app.post("/hdfcWebhook", async (req, res) => {
     //TODO: Add zod validation here?
     //TODO: HDFC bank should ideally send us a secret so we know this is sent by them
     //TODO: Check if the onRampTxn is Processing or not to avoid sending same request and updating the balance
+
     const paymentInformation: {
         token: string;
         userId: string;
@@ -17,6 +18,25 @@ app.post("/hdfcWebhook", async (req, res) => {
         userId: req.body.user_identifier,
         amount: req.body.amount
     };
+
+    // database check
+    const getRecord = await db.onRampTransaction.findUnique({
+        where: {
+            token: paymentInformation.token,
+        },
+    })
+
+    if (getRecord?.status == "Success") {
+        return res.status(409).json({
+            message: "Transaction already processed"
+        })
+    }
+
+    if (getRecord?.amount != Number(paymentInformation.amount)) {
+        return res.status(203).json({
+            message: "Requested amount mismatch"
+        })
+    }
 
     try {
         await db.$transaction([
@@ -34,7 +54,7 @@ app.post("/hdfcWebhook", async (req, res) => {
             db.onRampTransaction.updateMany({
                 where: {
                     token: paymentInformation.token
-                }, 
+                },
                 data: {
                     status: "Success",
                 }
@@ -44,7 +64,7 @@ app.post("/hdfcWebhook", async (req, res) => {
         res.json({
             message: "Captured"
         })
-    } catch(e) {
+    } catch (e) {
         console.error(e);
         res.status(411).json({
             message: "Error while processing webhook"
