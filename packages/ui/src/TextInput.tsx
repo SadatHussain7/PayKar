@@ -4,10 +4,12 @@ export const TextInput = ({
   placeholder,
   onChange,
   label,
+  value,
 }: {
   placeholder: string;
   onChange: (value: string) => void;
   label: string;
+  value?: string | number;
 }) => {
   return (
     <div className="pt-2">
