@@ -2,16 +2,19 @@ import prisma from "@repo/db/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../lib/auth";
 import { OnRampTransactions } from "../../../components/OnRampTransactions";
+import { SentTransactions } from "../../../components/SentTransactions";
+import { OnRampStatus } from "@prisma/client";
+import { P2PTransactions } from "../../../components/P2PTransactions";
 
-async function getOnRampTransactions(status: any) {
+async function getOnRampTransactions(status: OnRampStatus) {
   const session = await getServerSession(authOptions);
-  const txns = await prisma.onRampTransaction.findMany({
+  const transactions = await prisma.onRampTransaction.findMany({
     where: {
       userId: Number(session?.user?.id),
       status: status,
     },
   });
-  return txns.map((t) => ({
+  return transactions.map((t) => ({
     time: t.startTime,
     amount: t.amount,
     status: t.status,
@@ -19,92 +22,77 @@ async function getOnRampTransactions(status: any) {
   }));
 }
 
-async function getsentP2PTransactions() {
+async function getP2PTransactions() {
   const session = await getServerSession(authOptions);
-  const txns = await prisma.p2pTransfer.findMany({
+  const sentTransactions = await prisma.p2pTransfer.findMany({
     where: {
       fromUserId: Number(session?.user?.id),
     },
   });
-
-  return txns.map((t) => ({
-    time: t.timestamp,
-    amount: t.amount,
-    status: "Success",
-    provider: t.toUserId,
-  }));
-}
-
-async function getreceiveP2PTransactions() {
-  const session = await getServerSession(authOptions);
-  const txns = await prisma.p2pTransfer.findMany({
+  const receivedTransactions = await prisma.p2pTransfer.findMany({
     where: {
       toUserId: Number(session?.user?.id),
     },
   });
-
-  return txns.map((t) => ({
-    time: t.timestamp,
-    amount: t.amount,
-    status: "Success",
-    provider: t.fromUserId,
-  }));
+  return {
+    sent: sentTransactions.map((t) => ({
+      time: t.timestamp,
+      amount: t.amount,
+      status: "Sent", // Add a default status
+      provider: "P2P", // Add a default provider
+      transactionType: "Sent",
+    })),
+    received: receivedTransactions.map((t) => ({
+      time: t.timestamp,
+      amount: t.amount,
+      status: "Received", // Add a default status
+      provider: "P2P", // Add a default provider
+      transactionType: "Received",
+    })),
+  };
 }
 
-export default async function () {
-  const successTransactions = await getOnRampTransactions("Success");
-  const processingTransactions = await getOnRampTransactions("Processing");
-  const failureTransactions = await getOnRampTransactions("Failure");
-  const sentTransactions: any = await getsentP2PTransactions();
-  const receivedTransactions: any = await getreceiveP2PTransactions();
+export default async function Transactions() {
+  const successTransactions = await getOnRampTransactions(OnRampStatus.Success);
+  const processingTransactions = await getOnRampTransactions(
+    OnRampStatus.Processing
+  );
+  const failureTransactions = await getOnRampTransactions(OnRampStatus.Failure);
+  const p2pTransactions = await getP2PTransactions();
 
   return (
-    <div className="flex flex-col gap-5">
-      <h1 className="text-4xl text-[#6a51a6] pt-8 mb-8 font-bold">
+    <div className="w-screen">
+      <div className="text-4xl text-[#6a51a6] pt-8 mb-8 font-bold">
         Transactions
-      </h1>
-
-      <div className="w-[80vw] grid grid-cols-1 md:grid-cols-2 px-10 gap-3">
-        <h1 className="text-2xl text-[#6a51a6] pt-2 font-bold col-span-2">
-          P2P Transactions
-        </h1>
-        <div>
-          <OnRampTransactions
-            title={"Sent transactions"}
-            transactions={sentTransactions}
-          />
-        </div>
-        <div>
-          <OnRampTransactions
-            title={"Received transactions"}
-            transactions={receivedTransactions}
-          />
-        </div>
       </div>
-
-      <div className="w-[80vw] grid grid-cols-1 md:grid-cols-2 px-10 gap-3">
-        <h1 className="text-2xl text-[#6a51a6] pt-2 font-bold col-span-2">
-          Wallet Transactions
-        </h1>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 p-4">
         <div>
+          <h2 className="text-2xl font-bold">Recent P2P Transactions</h2>
+          <P2PTransactions
+            transactions={[
+              ...p2pTransactions.sent,
+              ...p2pTransactions.received,
+            ]}
+          />
+        </div>
+        <div className="col-span-2">
+          <h2 className="text-2xl font-bold">Wallet Transactions</h2>
           <OnRampTransactions
-            title={"Successfull transactions"}
+            title="Successful Transactions"
             transactions={successTransactions}
           />
-        </div>
-
-        <div>
           <OnRampTransactions
-            title={"Processing Transactions"}
+            title="Processing Transactions"
             transactions={processingTransactions}
           />
-        </div>
-
-        <div>
           <OnRampTransactions
-            title={"Failure Transactions"}
+            title="Failed Transactions"
             transactions={failureTransactions}
           />
+        </div>
+        <div className="col-span-2">
+          <h2 className="text-2xl font-bold">Sent Transactions</h2>
+          <SentTransactions transactions={p2pTransactions.sent} />
         </div>
       </div>
     </div>

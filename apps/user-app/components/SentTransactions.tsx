@@ -1,21 +1,10 @@
 "use client";
-
 import { useState } from "react";
 import { Card } from "@repo/ui/card";
 
-const getStatement = (status: string) => {
-  if (status === "Success") {
-    return "Received INR";
-  } else if (status === "Processing") {
-    return "To be Received INR";
-  } else {
-    return "Failed";
-  }
-};
-
-export const OnRampTransactions = ({
+export const SentTransactions = ({
   transactions,
-  title = "Recent wallet Transactions",
+  title = "Sent Transactions",
 }: {
   transactions: {
     time: Date;
@@ -60,13 +49,13 @@ export const OnRampTransactions = ({
         {paginatedTransactions.map((t, index) => (
           <div key={index} className="flex justify-between">
             <div>
-              <div className="text-sm">{getStatement(t.status)}</div>
+              <div className="text-sm">Sent INR</div>
               <div className="text-slate-600 text-xs">
                 {t.time.toDateString()}
               </div>
             </div>
             <div className="flex flex-col justify-center">
-              + Rs {t.amount / 100}
+              - Rs {t.amount / 100}
             </div>
           </div>
         ))}

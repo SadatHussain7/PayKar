@@ -3,6 +3,7 @@ import { authOptions } from "../../lib/auth";
 import { BalanceCard } from "../../../components/BalanceCard";
 import { OnRampTransactions } from "../../../components/OnRampTransactions";
 import { P2PTransactions } from "../../../components/P2PTransactions";
+import { SentTransactions } from "../../../components/SentTransactions";
 import prisma from "@repo/db/client";
 import { OnRampStatus } from "@prisma/client";
 
@@ -51,11 +52,15 @@ async function getP2PTransactions() {
     sent: sentTransactions.map((t) => ({
       time: t.timestamp,
       amount: t.amount,
+      status: "Sent", // Add a default status
+      provider: "P2P", // Add a default provider
       transactionType: "Sent",
     })),
     received: receivedTransactions.map((t) => ({
       time: t.timestamp,
       amount: t.amount,
+      status: "Received", // Add a default status
+      provider: "P2P", // Add a default provider
       transactionType: "Received",
     })),
   };
@@ -102,6 +107,10 @@ export default async function Dashboard() {
             title="Failed Transactions"
             transactions={failureTransactions}
           />
+        </div>
+        <div className="col-span-2">
+          <h2 className="text-2xl font-bold">Sent Transactions</h2>
+          <SentTransactions transactions={p2pTransactions.sent} />
         </div>
       </div>
     </div>
