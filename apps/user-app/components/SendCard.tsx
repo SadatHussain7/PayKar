@@ -1,46 +1,59 @@
 "use client";
 import { Button } from "@repo/ui/button";
 import { Card } from "@repo/ui/card";
-import { Center } from "@repo/ui/center";
 import { TextInput } from "@repo/ui/textinput";
 import { useState } from "react";
 import { p2pTransfer } from "../app/lib/actions/p2pTransfer";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export function SendCard() {
   const [number, setNumber] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(0);
+
+  const handleSendMoney = async () => {
+    try {
+      const result = await p2pTransfer(number, amount * 100);
+      if (result.success) {
+        toast.success(result.message);
+        setNumber("");
+        setAmount(0);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (e) {
+      toast.error("An unexpected error occurred");
+    }
+  };
 
   return (
     <div className="h-[90vh]">
-      <Center>
-        <Card title="Send">
-          <div className="min-w-72 pt-2">
-            <TextInput
-              placeholder={"Number"}
-              label="Number"
-              onChange={(value) => {
-                setNumber(value);
-              }}
-            />
-            <TextInput
-              placeholder={"Amount"}
-              label="Amount"
-              onChange={(value) => {
-                setAmount(value);
-              }}
-            />
-            <div className="pt-4 flex justify-center">
-              <Button
-                onClick={async () => {
-                  await p2pTransfer(number, Number(amount) * 100);
-                }}
-              >
-                Send
-              </Button>
-            </div>
+      <Card title="Send">
+        <div className="w-full">
+          <TextInput
+            label={"Number"}
+            placeholder={"Number"}
+            // value={number}
+            onChange={(value) => {
+              setNumber(value);
+            }}
+          />
+
+          <TextInput
+            label={"Amount"}
+            placeholder={"Amount"}
+            // value={amount}
+            onChange={(value) => {
+              setAmount(Number(value));
+            }}
+          />
+
+          <div className="flex justify-center pt-4">
+            <Button onClick={handleSendMoney}>Send Money</Button>
           </div>
-        </Card>
-      </Center>
+        </div>
+      </Card>
+      <ToastContainer />
     </div>
   );
 }

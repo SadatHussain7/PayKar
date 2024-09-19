@@ -3,27 +3,14 @@
 import { useState } from "react";
 import { Card } from "@repo/ui/card";
 
-const getStatement = (status: string) => {
-  if (status === "Success") {
-    return "Received INR";
-  } else if (status === "Processing") {
-    return "To be Received INR";
-  } else {
-    return "Failed";
-  }
-};
-
-export const OnRampTransactions = ({
+export const P2PTransactions = ({
   transactions,
-  title = "Recent wallet Transactions",
 }: {
   transactions: {
     time: Date;
     amount: number;
-    status: string;
-    provider: string;
+    transactionType: string;
   }[];
-  title?: string;
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
@@ -48,25 +35,30 @@ export const OnRampTransactions = ({
 
   if (!transactions.length) {
     return (
-      <Card title={title}>
-        <div className="text-center pb-8 pt-8">No {title}</div>
+      <Card title="P2P Transactions">
+        <div className="text-center pb-8 pt-8">No transactions</div>
       </Card>
     );
   }
 
   return (
-    <Card title={title}>
+    <Card title="P2P Transactions">
       <div className="pt-2 flex flex-col gap-4">
         {paginatedTransactions.map((t, index) => (
           <div key={index} className="flex justify-between">
             <div>
-              <div className="text-sm">{getStatement(t.status)}</div>
+              {t.transactionType === "Sent" ? (
+                <div className="text-sm">Sent INR</div>
+              ) : (
+                <div className="text-sm">Received INR</div>
+              )}
               <div className="text-slate-600 text-xs">
                 {t.time.toDateString()}
               </div>
             </div>
             <div className="flex flex-col justify-center">
-              + Rs {t.amount / 100}
+              {t.transactionType === "Sent" ? <>-</> : <>+</>} Rs{" "}
+              {t.amount / 100}
             </div>
           </div>
         ))}
